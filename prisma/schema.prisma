@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  VENDOR
+  ADMIN
+}
+
+enum ListingType {
+  HOTEL
+  RESTAURANT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          UserRole  @default(CUSTOMER)
+  phone         String?
+  address       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  listings      Listing[]
+  bookings      Booking[]
+  reviews       Review[]
+}
+
+model Listing {
+  id            String      @id @default(cuid())
+  type          ListingType
+  name          String
+  description   String
+  address       String
+  city          String
+  country       String
+  facilities    String[]
+  images        String[]
+  rating        Float       @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  vendor        User        @relation(fields: [vendorId], references: [id])
+  vendorId      String
+  units         Unit[]
+  bookings      Booking[]
+  reviews       Review[]
+}
+
+model Unit {
+  id            String    @id @default(cuid())
+  name          String    // Room number or table number
+  description   String
+  capacity      Int
+  price         Float
+  available     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  listing       Listing   @relation(fields: [listingId], references: [id])
+  listingId     String
+  bookings      Booking[]
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  startDate     DateTime
+  endDate       DateTime
+  status        BookingStatus @default(PENDING)
+  totalPrice    Float
+  paymentStatus Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  customer      User          @relation(fields: [customerId], references: [id])
+  customerId    String
+  listing       Listing       @relation(fields: [listingId], references: [id])
+  listingId     String
+  unit          Unit          @relation(fields: [unitId], references: [id])
+  unitId        String
+  review        Review?
+}
+
+model Review {
+  id            String    @id @default(cuid())
+  rating        Int
+  comment       String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  customer      User      @relation(fields: [customerId], references: [id])
+  customerId    String
+  listing       Listing   @relation(fields: [listingId], references: [id])
+  listingId     String
+  booking       Booking   @relation(fields: [bookingId], references: [id])
+  bookingId     String    @unique
+}
+
