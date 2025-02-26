@@ -13,7 +13,7 @@ export default async function ListingsPage() {
   }
 
   const listings = await prisma.listing.findMany({
-    where: session.role === "VENDOR" ? { vendorId: session.id } : undefined,
+    where: session.role === "VENDOR" ? { vendorId: session.id as string } : undefined,
     include: {
       vendor: true,
       reviews: true,
